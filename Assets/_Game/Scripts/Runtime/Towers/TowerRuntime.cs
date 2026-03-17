@@ -1,5 +1,6 @@
 using System;
 using TdRandomElemental.Board;
+using TdRandomElemental.UI;
 using UnityEngine;
 
 namespace TdRandomElemental.Towers
@@ -7,6 +8,7 @@ namespace TdRandomElemental.Towers
     [DisallowMultipleComponent]
     [RequireComponent(typeof(TowerTargetSelector))]
     [RequireComponent(typeof(TowerAttackController))]
+    [RequireComponent(typeof(TowerWorldIndicator))]
     public sealed class TowerRuntime : MonoBehaviour
     {
         private const string RuntimeVisualRootName = "RuntimeVisual";
