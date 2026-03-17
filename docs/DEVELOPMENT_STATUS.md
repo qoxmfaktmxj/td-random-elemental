@@ -14,6 +14,8 @@ Current implemented flow:
 6. Towers attack enemies automatically.
 7. Matching towers can be merged with `E`.
 8. Placed towers can be sold with `Q`.
+9. A runtime HUD shows gold, core HP, wave state, controls, and interaction prompts.
+10. Fire, Water, and Earth towers apply distinct elemental combat effects.
 
 ## Completed Tasks
 
@@ -27,18 +29,12 @@ Current implemented flow:
 - `T08` Tower attack loop
 - `T09` Random summon and placement
 - `T10` Merge and sell
+- `T11` Element effects
+- `T12` HUD and world UI
 
 ## Remaining Tasks
 
 ### High Priority
-
-- `T12` HUD and world UI
-  - Gold, core HP, wave state, remaining enemies, interaction prompt, control hints
-  - This is the most important next step because the current build is functional but hard to read without editor inspection
-
-- `T11` Element effects
-  - Fire burn, Water slow, Earth impact behavior
-  - Right now towers differ mainly by stats and targeting, not by visible combat effect
 
 - `T14` Run flow and boss structure
   - Clear win/lose handling
@@ -83,15 +79,14 @@ Current implemented flow:
 ## Known Technical Limits
 
 - The game is still driven by runtime-generated fallback content.
-- There is no HUD yet, so gameplay readability depends on Unity inspector or scene observation.
 - Merge upgrade definitions are generated at runtime, not yet backed by authored tier assets.
-- Element effects are not yet applied to enemies; only base damage and targeting behavior are active.
+- The HUD is currently an `OnGUI` debug-style runtime UI, not a final production UI.
+- Element effects are implemented, but VFX and authored audiovisual feedback are still placeholder-level.
 - There is no explicit run-end screen or boss encounter flow yet.
 
 ## Recommended Next Order
 
-1. Build HUD/UI so the current game is readable without editor knowledge.
-2. Add element effects so tower identities become visible in play.
-3. Add run flow and boss structure so the loop has a real end state.
-4. Add pity logic so randomness becomes fairer.
-5. Add presentation polish after the systems are stable.
+1. Add run flow and boss structure so the loop has a real end state.
+2. Add pity logic so randomness becomes fairer.
+3. Replace the debug HUD with production UI.
+4. Add presentation polish after the systems are stable.
