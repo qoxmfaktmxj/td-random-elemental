@@ -1,4 +1,5 @@
 using TdRandomElemental.Enemies;
+using TdRandomElemental.Elements;
 using UnityEngine;
 
 namespace TdRandomElemental.Towers
@@ -49,7 +50,7 @@ namespace TdRandomElemental.Towers
 
             if (!towerRuntime.UsesProjectile)
             {
-                target.ApplyDamage(towerRuntime.Damage);
+                ElementEffectProcessor.ApplyHit(target, towerRuntime, target.transform.position);
                 return;
             }
 
@@ -67,9 +68,7 @@ namespace TdRandomElemental.Towers
             ProjectileMover projectileMover = projectileObject.AddComponent<ProjectileMover>();
             projectileMover.Initialize(
                 target,
-                towerRuntime.Damage,
-                towerRuntime.ProjectileSpeed,
-                towerRuntime.SplashRadius,
+                towerRuntime,
                 towerRuntime.PrimaryColor);
         }
 

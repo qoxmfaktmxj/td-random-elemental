@@ -187,21 +187,24 @@ namespace TdRandomElemental.Summoning
                 "Fire",
                 new Color(1f, 0.42f, 0.16f, 1f),
                 new Color(1f, 0.78f, 0.2f, 1f),
-                ElementEffectKind.Burn);
+                ElementEffectKind.Burn,
+                new ElementStatusTuning(0.85f, 0.35f, 1.75f, 0f, 0f, 0f, 0f));
 
             ElementDefinition water = CreateRuntimeElement(
                 "water",
                 "Water",
                 new Color(0.2f, 0.75f, 1f, 1f),
                 new Color(0.7f, 0.95f, 1f, 1f),
-                ElementEffectKind.Slow);
+                ElementEffectKind.Slow,
+                new ElementStatusTuning(0f, 0.35f, 0f, 0.4f, 1.6f, 0f, 0f));
 
             ElementDefinition earth = CreateRuntimeElement(
                 "earth",
                 "Earth",
                 new Color(0.67f, 0.54f, 0.28f, 1f),
                 new Color(0.88f, 0.78f, 0.46f, 1f),
-                ElementEffectKind.Knockback);
+                ElementEffectKind.Knockback,
+                new ElementStatusTuning(0f, 0.35f, 0f, 0f, 0f, 6f, 1.35f));
 
             TowerRoleDefinition attack = CreateRuntimeRole(
                 "attack",
@@ -237,11 +240,19 @@ namespace TdRandomElemental.Summoning
             string displayName,
             Color primaryColor,
             Color secondaryColor,
-            ElementEffectKind primaryEffect)
+            ElementEffectKind primaryEffect,
+            ElementStatusTuning statusTuning)
         {
             ElementDefinition definition = ScriptableObject.CreateInstance<ElementDefinition>();
             definition.name = $"RuntimeElement_{displayName}";
-            definition.ApplyRuntimeData(elementId, displayName, $"{displayName} runtime fallback.", primaryColor, secondaryColor, primaryEffect);
+            definition.ApplyRuntimeData(
+                elementId,
+                displayName,
+                $"{displayName} runtime fallback.",
+                primaryColor,
+                secondaryColor,
+                primaryEffect,
+                statusTuning);
             return definition;
         }
 

@@ -14,6 +14,10 @@ namespace TdRandomElemental.Enemies
         [SerializeField] private float fallbackMoveSpeed = 2f;
         [Min(0.01f)]
         [SerializeField] private float reachThreshold = 0.2f;
+        [SerializeField] private float speedMultiplier = 1f;
+        [SerializeField] private Vector3 externalVelocity;
+        [Min(0.1f)]
+        [SerializeField] private float externalVelocityDamping = 10f;
 
         private int nextWaypointIndex;
         private bool hasReachedCore;
@@ -56,7 +60,7 @@ namespace TdRandomElemental.Enemies
 
             Vector3 target = targetPosition + new Vector3(0f, 0.5f, 0f);
             Vector3 toTarget = target - transform.position;
-            float moveDistance = GetMoveSpeed() * Time.deltaTime;
+            float moveDistance = GetMoveSpeed() * speedMultiplier * Time.deltaTime;
 
             if (toTarget.sqrMagnitude <= reachThreshold * reachThreshold)
             {
@@ -70,12 +74,19 @@ namespace TdRandomElemental.Enemies
             }
 
             Vector3 moveDirection = toTarget.normalized;
-            transform.position += moveDirection * moveDistance;
+            Vector3 frameDisplacement = moveDirection * moveDistance + externalVelocity * Time.deltaTime;
+            transform.position += frameDisplacement;
 
-            moveDirection.y = 0f;
-            if (moveDirection.sqrMagnitude > 0.001f)
+            externalVelocity = Vector3.MoveTowards(
+                externalVelocity,
+                Vector3.zero,
+                externalVelocityDamping * Time.deltaTime);
+
+            Vector3 facingDirection = frameDisplacement;
+            facingDirection.y = 0f;
+            if (facingDirection.sqrMagnitude > 0.001f)
             {
-                transform.rotation = Quaternion.LookRotation(moveDirection.normalized, Vector3.up);
+                transform.rotation = Quaternion.LookRotation(facingDirection.normalized, Vector3.up);
             }
         }
 
@@ -84,11 +95,23 @@ namespace TdRandomElemental.Enemies
             pathLane = lane;
             definition = enemyDefinition;
             nextWaypointIndex = pathLane != null && pathLane.WaypointCount > 1 ? 1 : 0;
+            speedMultiplier = 1f;
+            externalVelocity = Vector3.zero;
 
             transform.position = (pathLane != null ? pathLane.GetSpawnPosition() : transform.position) + new Vector3(0f, 0.5f, 0f);
 
             Vector3 modelScale = definition != null ? definition.ModelScale : Vector3.one;
             transform.localScale = modelScale;
+        }
+
+        public void SetSpeedMultiplier(float multiplier)
+        {
+            speedMultiplier = Mathf.Clamp(multiplier, 0.1f, 1.5f);
+        }
+
+        public void ApplyImpulse(Vector3 impulseVelocity)
+        {
+            externalVelocity += impulseVelocity;
         }
 
         [ContextMenu("Debug/Teleport To Core")]

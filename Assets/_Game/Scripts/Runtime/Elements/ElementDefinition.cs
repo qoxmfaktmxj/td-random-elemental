@@ -20,6 +20,9 @@ namespace TdRandomElemental.Elements
         [Min(0.01f)]
         [SerializeField] private float tickInterval;
 
+        [Min(0f)]
+        [SerializeField] private float burnDuration;
+
         [Range(0f, 1f)]
         [SerializeField] private float slowPercent;
 
@@ -32,8 +35,27 @@ namespace TdRandomElemental.Elements
         [Min(0f)]
         [SerializeField] private float impactRadius;
 
+        public ElementStatusTuning(
+            float damagePerTick,
+            float tickInterval,
+            float burnDuration,
+            float slowPercent,
+            float slowDuration,
+            float knockbackForce,
+            float impactRadius)
+        {
+            this.damagePerTick = Mathf.Max(0f, damagePerTick);
+            this.tickInterval = Mathf.Max(0.01f, tickInterval);
+            this.burnDuration = Mathf.Max(0f, burnDuration);
+            this.slowPercent = Mathf.Clamp01(slowPercent);
+            this.slowDuration = Mathf.Max(0f, slowDuration);
+            this.knockbackForce = Mathf.Max(0f, knockbackForce);
+            this.impactRadius = Mathf.Max(0f, impactRadius);
+        }
+
         public float DamagePerTick => damagePerTick;
         public float TickInterval => tickInterval;
+        public float BurnDuration => burnDuration;
         public float SlowPercent => slowPercent;
         public float SlowDuration => slowDuration;
         public float KnockbackForce => knockbackForce;

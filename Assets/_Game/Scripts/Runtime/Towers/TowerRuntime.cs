@@ -1,5 +1,6 @@
 using System;
 using TdRandomElemental.Board;
+using TdRandomElemental.Elements;
 using TdRandomElemental.UI;
 using UnityEngine;
 
@@ -45,6 +46,7 @@ namespace TdRandomElemental.Towers
         public string DisplayName => definition != null ? definition.DisplayName : fallbackDisplayName;
         public string RoleId => definition != null && definition.Role != null ? definition.Role.RoleId : "debug_role";
         public string ElementId => definition != null && definition.Element != null ? definition.Element.ElementId : "debug_element";
+        public ElementDefinition ElementDefinition => definition != null ? definition.Element : null;
         public string MergeSignature => $"{RoleId}:{ElementId}:{Tier}";
         public float Damage => definition != null ? definition.Damage : fallbackDamage;
         public float AttackRange => definition != null ? definition.AttackRange : fallbackAttackRange;
