@@ -51,7 +51,7 @@ namespace TdRandomElemental.Core
         };
 
         public static readonly Vector3 ArenaCameraPosition = new Vector3(14f, 16f, -14f);
-        public static readonly Vector3 ArenaCameraEulerAngles = new Vector3(42f, 45f, 0f);
+        public static readonly Vector3 ArenaCameraEulerAngles = new Vector3(42f, 315f, 0f);
         public static readonly Vector3 ArenaGroundPosition = new Vector3(0f, -0.5f, 0f);
         public static readonly Vector3 ArenaGroundScale = new Vector3(24f, 1f, 24f);
         public static readonly Color CameraBackgroundColor = new Color(0.08f, 0.1f, 0.14f, 1f);

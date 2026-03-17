@@ -38,6 +38,11 @@ namespace TdRandomElemental.Editor
                 return;
             }
 
+            RunProjectSetup();
+        }
+
+        public static void RunProjectSetup()
+        {
             EnsureFolders();
             EnsureBootstrapScene();
             EnsureMvpArenaScene();
@@ -78,13 +83,8 @@ namespace TdRandomElemental.Editor
 
         private static void EnsureBootstrapScene()
         {
-            if (SceneExists(StartupConfig.BootstrapScenePath))
-            {
-                return;
-            }
-
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            CreateCamera(
+            Scene scene = OpenOrCreateScene(StartupConfig.BootstrapScenePath);
+            EnsureCamera(
                 "Bootstrap Camera",
                 new Vector3(0f, 8f, -8f),
                 new Vector3(35f, 0f, 0f));
@@ -94,18 +94,13 @@ namespace TdRandomElemental.Editor
 
         private static void EnsureMvpArenaScene()
         {
-            if (SceneExists(StartupConfig.MvpArenaScenePath))
-            {
-                return;
-            }
-
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            CreateDirectionalLight();
-            CreateCamera(
+            Scene scene = OpenOrCreateScene(StartupConfig.MvpArenaScenePath);
+            EnsureDirectionalLight();
+            EnsureCamera(
                 "Arena Camera",
                 StartupConfig.ArenaCameraPosition,
                 StartupConfig.ArenaCameraEulerAngles);
-            CreateGround();
+            EnsureGround();
 
             EditorSceneManager.SaveScene(scene, StartupConfig.MvpArenaScenePath);
         }
@@ -130,37 +125,88 @@ namespace TdRandomElemental.Editor
             return AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath) != null;
         }
 
-        private static void CreateDirectionalLight()
+        private static Scene OpenOrCreateScene(string scenePath)
         {
-            GameObject lightObject = new GameObject("Directional Light");
-            Light light = lightObject.AddComponent<Light>();
+            return SceneExists(scenePath)
+                ? EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single)
+                : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        }
+
+        private static void EnsureDirectionalLight()
+        {
+            GameObject lightObject = FindRootObject("Directional Light");
+            if (lightObject == null)
+            {
+                lightObject = new GameObject("Directional Light");
+            }
+
+            Light light = lightObject.GetComponent<Light>();
+            if (light == null)
+            {
+                light = lightObject.AddComponent<Light>();
+            }
+
             light.type = LightType.Directional;
             light.intensity = 1.1f;
             lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }
 
-        private static void CreateCamera(string objectName, Vector3 position, Vector3 eulerAngles)
+        private static void EnsureCamera(string objectName, Vector3 position, Vector3 eulerAngles)
         {
-            GameObject cameraObject = new GameObject(objectName);
+            GameObject cameraObject = FindRootObject(objectName);
+            if (cameraObject == null)
+            {
+                cameraObject = new GameObject(objectName);
+            }
+
             cameraObject.tag = "MainCamera";
 
-            Camera camera = cameraObject.AddComponent<Camera>();
+            Camera camera = cameraObject.GetComponent<Camera>();
+            if (camera == null)
+            {
+                camera = cameraObject.AddComponent<Camera>();
+            }
+
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = StartupConfig.CameraBackgroundColor;
             camera.nearClipPlane = 0.1f;
             camera.farClipPlane = 200f;
 
-            cameraObject.AddComponent<AudioListener>();
+            if (cameraObject.GetComponent<AudioListener>() == null)
+            {
+                cameraObject.AddComponent<AudioListener>();
+            }
+
             cameraObject.transform.position = position;
-            cameraObject.transform.eulerAngles = eulerAngles;
+            cameraObject.transform.rotation = Quaternion.Euler(eulerAngles);
         }
 
-        private static void CreateGround()
+        private static void EnsureGround()
         {
-            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            ground.name = "Ground";
+            GameObject ground = FindRootObject("Ground");
+            if (ground == null)
+            {
+                ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ground.name = "Ground";
+            }
+
             ground.transform.position = StartupConfig.ArenaGroundPosition;
             ground.transform.localScale = StartupConfig.ArenaGroundScale;
+        }
+
+        private static GameObject FindRootObject(string objectName)
+        {
+            Scene activeScene = SceneManager.GetActiveScene();
+            GameObject[] roots = activeScene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                if (roots[i].name == objectName)
+                {
+                    return roots[i];
+                }
+            }
+
+            return null;
         }
     }
 }
