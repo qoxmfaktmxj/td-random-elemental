@@ -28,6 +28,7 @@ namespace TdRandomElemental.Waves
 
         private EnemySpawner enemySpawner;
         private Coroutine waveRoutine;
+        private bool runAborted;
         private bool runCompleted;
 
         public static WaveController Instance { get; private set; }
@@ -106,9 +107,25 @@ namespace TdRandomElemental.Waves
             }
 
             trackedEnemyIds.Clear();
+            runAborted = false;
             runCompleted = false;
             runtimeState.ConfigureRun(waveDefinitions.Count);
             waveRoutine = StartCoroutine(RunWaveSequence());
+        }
+
+        public void AbortWaveRun()
+        {
+            runAborted = true;
+
+            if (waveRoutine != null)
+            {
+                StopCoroutine(waveRoutine);
+                waveRoutine = null;
+            }
+
+            ClearActiveEnemies(false);
+            runtimeState.FinishWave();
+            runCompleted = false;
         }
 
         [ContextMenu("Debug/Restart Wave Run")]
@@ -126,7 +143,7 @@ namespace TdRandomElemental.Waves
                 waveRoutine = null;
             }
 
-            ClearActiveEnemies();
+            ClearActiveEnemies(true);
             StartWaveRun();
         }
 
@@ -140,15 +157,28 @@ namespace TdRandomElemental.Waves
                     continue;
                 }
 
-                runtimeState.BeginPreparation(waveDefinition.WaveIndex, waveDefinition.PreparationTime);
+                runtimeState.BeginPreparation(waveDefinition.WaveIndex, waveDefinition.PreparationTime, waveDefinition.IsBossWave);
                 yield return RunPreparationCountdown(waveDefinition.PreparationTime);
+                if (ShouldAbortRun())
+                {
+                    break;
+                }
 
                 int totalSpawnCount = CountWaveSpawns(waveDefinition);
-                runtimeState.BeginWave(waveDefinition.WaveIndex, totalSpawnCount);
+                runtimeState.BeginWave(waveDefinition.WaveIndex, totalSpawnCount, waveDefinition.IsBossWave);
                 WaveStarted?.Invoke(waveDefinition);
 
                 yield return SpawnWaveEntries(waveDefinition);
+                if (ShouldAbortRun())
+                {
+                    break;
+                }
+
                 yield return WaitForWaveToClear();
+                if (ShouldAbortRun())
+                {
+                    break;
+                }
 
                 if (RunStateService.Instance != null && waveDefinition.ClearGoldBonus > 0)
                 {
@@ -160,8 +190,11 @@ namespace TdRandomElemental.Waves
             }
 
             waveRoutine = null;
-            runCompleted = true;
-            AllWavesCompleted?.Invoke();
+            if (!ShouldAbortRun())
+            {
+                runCompleted = true;
+                AllWavesCompleted?.Invoke();
+            }
         }
 
         private IEnumerator RunPreparationCountdown(float duration)
@@ -171,6 +204,11 @@ namespace TdRandomElemental.Waves
 
             while (remaining > 0f)
             {
+                if (ShouldAbortRun())
+                {
+                    yield break;
+                }
+
                 yield return null;
                 remaining = Mathf.Max(0f, remaining - Time.deltaTime);
                 runtimeState.SetPreparationTimer(remaining);
@@ -182,18 +220,36 @@ namespace TdRandomElemental.Waves
             IReadOnlyList<WaveSpawnEntry> entries = waveDefinition.SpawnEntries;
             for (int i = 0; i < entries.Count; i++)
             {
+                if (ShouldAbortRun())
+                {
+                    yield break;
+                }
+
                 WaveSpawnEntry spawnEntry = entries[i];
                 if (spawnEntry.InitialDelay > 0f)
                 {
                     yield return new WaitForSeconds(spawnEntry.InitialDelay);
+                    if (ShouldAbortRun())
+                    {
+                        yield break;
+                    }
                 }
 
                 for (int spawnIndex = 0; spawnIndex < spawnEntry.Count; spawnIndex++)
                 {
+                    if (ShouldAbortRun())
+                    {
+                        yield break;
+                    }
+
                     enemySpawner.SpawnEnemy(spawnEntry.Enemy);
                     if (spawnIndex + 1 < spawnEntry.Count)
                     {
                         yield return new WaitForSeconds(spawnEntry.SpawnInterval);
+                        if (ShouldAbortRun())
+                        {
+                            yield break;
+                        }
                     }
                 }
             }
@@ -203,6 +259,11 @@ namespace TdRandomElemental.Waves
         {
             while (runtimeState.RemainingEnemyCount > 0)
             {
+                if (ShouldAbortRun())
+                {
+                    yield break;
+                }
+
                 yield return null;
             }
         }
@@ -288,12 +349,17 @@ namespace TdRandomElemental.Waves
         private static List<WaveDefinition> BuildRuntimeFallbackWaves()
         {
             List<WaveDefinition> fallbackWaves = new List<WaveDefinition>(6);
-            fallbackWaves.Add(CreateRuntimeWave(1, 2f, false, 2, new WaveSpawnEntry(null, 3, 0f, 0.75f)));
-            fallbackWaves.Add(CreateRuntimeWave(2, 2f, false, 3, new WaveSpawnEntry(null, 4, 0f, 0.65f)));
-            fallbackWaves.Add(CreateRuntimeWave(3, 2f, false, 4, new WaveSpawnEntry(null, 5, 0f, 0.55f)));
-            fallbackWaves.Add(CreateRuntimeWave(4, 2f, false, 5, new WaveSpawnEntry(null, 6, 0f, 0.5f)));
-            fallbackWaves.Add(CreateRuntimeWave(5, 2f, false, 6, new WaveSpawnEntry(null, 8, 0f, 0.45f)));
-            fallbackWaves.Add(CreateRuntimeWave(6, 3f, true, 10, new WaveSpawnEntry(null, 1, 0f, 1f)));
+            EnemyDefinition basicEnemy = CreateRuntimeEnemy("basic_enemy", "Shardling", EnemyArchetype.Basic, 12f, 2f, 1, 1, Vector3.one);
+            EnemyDefinition fastEnemy = CreateRuntimeEnemy("fast_enemy", "Racer", EnemyArchetype.Fast, 9f, 3.1f, 1, 1, new Vector3(0.85f, 1.05f, 0.85f));
+            EnemyDefinition tankEnemy = CreateRuntimeEnemy("tank_enemy", "Bulwark", EnemyArchetype.Tank, 26f, 1.45f, 2, 3, new Vector3(1.2f, 1.2f, 1.2f));
+            EnemyDefinition bossEnemy = CreateRuntimeEnemy("boss_enemy", "Rift Colossus", EnemyArchetype.Boss, 140f, 1.25f, 5, 18, new Vector3(2.4f, 2.8f, 2.4f));
+
+            fallbackWaves.Add(CreateRuntimeWave(1, 2f, false, 2, new WaveSpawnEntry(basicEnemy, 3, 0f, 0.75f)));
+            fallbackWaves.Add(CreateRuntimeWave(2, 2f, false, 3, new WaveSpawnEntry(basicEnemy, 4, 0f, 0.65f), new WaveSpawnEntry(fastEnemy, 2, 0.5f, 0.55f)));
+            fallbackWaves.Add(CreateRuntimeWave(3, 2f, false, 4, new WaveSpawnEntry(fastEnemy, 6, 0f, 0.48f)));
+            fallbackWaves.Add(CreateRuntimeWave(4, 2f, false, 5, new WaveSpawnEntry(tankEnemy, 3, 0f, 0.8f), new WaveSpawnEntry(basicEnemy, 4, 0.35f, 0.45f)));
+            fallbackWaves.Add(CreateRuntimeWave(5, 2f, false, 6, new WaveSpawnEntry(tankEnemy, 4, 0f, 0.72f), new WaveSpawnEntry(fastEnemy, 4, 0.35f, 0.38f)));
+            fallbackWaves.Add(CreateRuntimeWave(6, 3f, true, 14, new WaveSpawnEntry(bossEnemy, 1, 0f, 1f)));
             return fallbackWaves;
         }
 
@@ -310,19 +376,55 @@ namespace TdRandomElemental.Waves
             return waveDefinition;
         }
 
-        private void ClearActiveEnemies()
+        private static EnemyDefinition CreateRuntimeEnemy(
+            string enemyId,
+            string displayName,
+            EnemyArchetype archetype,
+            float maxHealth,
+            float moveSpeed,
+            int coreDamage,
+            int goldReward,
+            Vector3 modelScale)
+        {
+            EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            definition.name = $"RuntimeEnemy_{displayName}";
+            definition.ApplyRuntimeData(enemyId, displayName, archetype, maxHealth, moveSpeed, coreDamage, goldReward, modelScale);
+            return definition;
+        }
+
+        private bool ShouldAbortRun()
+        {
+            return runAborted || (RunStateService.Instance != null && RunStateService.Instance.IsRunLost);
+        }
+
+        private void ClearActiveEnemies(bool resetRuntimeState)
         {
             trackedEnemyIds.Clear();
             EnemyHealth[] activeEnemies = FindObjectsByType<EnemyHealth>(FindObjectsSortMode.None);
             for (int i = 0; i < activeEnemies.Length; i++)
             {
+                if (activeEnemies[i] == null)
+                {
+                    continue;
+                }
+
+                EnemyMover enemyMover = activeEnemies[i].GetComponent<EnemyMover>();
+                activeEnemies[i].Died -= HandleEnemyDied;
+                if (enemyMover != null)
+                {
+                    enemyMover.ReachedCore -= HandleEnemyReachedCore;
+                }
+
                 if (activeEnemies[i] != null)
                 {
                     Destroy(activeEnemies[i].gameObject);
                 }
             }
 
-            runtimeState.ConfigureRun(waveDefinitions.Count);
+            if (resetRuntimeState)
+            {
+                runtimeState.ConfigureRun(waveDefinitions.Count);
+            }
         }
     }
 }

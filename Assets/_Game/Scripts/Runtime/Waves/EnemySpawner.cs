@@ -63,10 +63,41 @@ namespace TdRandomElemental.Waves
                 return instance;
             }
 
-            GameObject enemyObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            PrimitiveType primitiveType = PrimitiveType.Sphere;
+            Color tintColor = new Color(0.8f, 0.82f, 0.88f, 1f);
+
+            if (definition != null)
+            {
+                switch (definition.Archetype)
+                {
+                    case EnemyArchetype.Fast:
+                        primitiveType = PrimitiveType.Capsule;
+                        tintColor = new Color(0.45f, 0.86f, 1f, 1f);
+                        break;
+
+                    case EnemyArchetype.Tank:
+                        primitiveType = PrimitiveType.Cube;
+                        tintColor = new Color(0.76f, 0.63f, 0.42f, 1f);
+                        break;
+
+                    case EnemyArchetype.Boss:
+                        primitiveType = PrimitiveType.Capsule;
+                        tintColor = new Color(1f, 0.36f, 0.28f, 1f);
+                        break;
+                }
+            }
+
+            GameObject enemyObject = GameObject.CreatePrimitive(primitiveType);
             enemyObject.name = definition != null
                 ? $"Enemy_{definition.DisplayName}"
                 : "Enemy_Runtime";
+
+            Renderer renderer = enemyObject.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.material.color = tintColor;
+            }
+
             return enemyObject;
         }
     }

@@ -118,7 +118,7 @@ namespace TdRandomElemental.UI
             GUI.Box(panelRect, GUIContent.none, panelStyle);
             GUILayout.BeginArea(new Rect(panelRect.x + 14f, panelRect.y + 10f, panelRect.width - 28f, panelRect.height - 20f));
             GUILayout.Label("CONTROLS", titleStyle);
-            GUILayout.Label("WASD  Move\nShift  Dash\nE  Summon / Merge\nQ  Sell", bodyStyle);
+            GUILayout.Label("WASD  Move\nShift  Dash\nE  Summon / Merge\nQ  Sell\nR  Restart Run", bodyStyle);
             GUILayout.EndArea();
         }
 
@@ -152,7 +152,32 @@ namespace TdRandomElemental.UI
             string bannerText = string.Empty;
             Color bannerColor = successText;
 
-            if (RunStateService.Instance != null && RunStateService.Instance.IsRunLost)
+            RunFlowController runFlowController = RunFlowController.Instance;
+            if (runFlowController != null)
+            {
+                switch (runFlowController.RunOutcome)
+                {
+                    case RunOutcomeState.Lost:
+                        bannerText = "CORE DESTROYED\nPress R to Restart";
+                        bannerColor = failText;
+                        break;
+
+                    case RunOutcomeState.Won:
+                        bannerText = "BOSS DEFEATED\nPress R to Restart";
+                        bannerColor = successText;
+                        break;
+
+                    default:
+                        if (runFlowController.IsBossEncounterActive)
+                        {
+                            bannerText = "BOSS WAVE";
+                            bannerColor = warningText;
+                        }
+
+                        break;
+                }
+            }
+            else if (RunStateService.Instance != null && RunStateService.Instance.IsRunLost)
             {
                 bannerText = "CORE DESTROYED";
                 bannerColor = failText;
@@ -171,7 +196,7 @@ namespace TdRandomElemental.UI
             Color previousColor = stateStyle.normal.textColor;
             stateStyle.normal.textColor = bannerColor;
 
-            Rect bannerRect = new Rect((Screen.width - 420f) * 0.5f, 26f, 420f, 42f);
+            Rect bannerRect = new Rect((Screen.width - 420f) * 0.5f, 26f, 420f, 58f);
             GUI.Box(bannerRect, GUIContent.none, panelStyle);
             GUI.Label(bannerRect, bannerText, stateStyle);
 

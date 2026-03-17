@@ -21,11 +21,13 @@ namespace TdRandomElemental.UI
 
             if (runtimeState.IsPreparing)
             {
-                builder.AppendLine($"Phase: Prepare ({runtimeState.TimeUntilNextWave:0.0}s)");
+                builder.AppendLine(runtimeState.IsBossWave
+                    ? $"Phase: Boss Prep ({runtimeState.TimeUntilNextWave:0.0}s)"
+                    : $"Phase: Prepare ({runtimeState.TimeUntilNextWave:0.0}s)");
             }
             else if (runtimeState.IsWaveRunning)
             {
-                builder.AppendLine("Phase: Combat");
+                builder.AppendLine(runtimeState.IsBossWave ? "Phase: Boss Combat" : "Phase: Combat");
             }
             else if (waveController.IsRunCompleted)
             {
@@ -36,6 +38,7 @@ namespace TdRandomElemental.UI
                 builder.AppendLine("Phase: Idle");
             }
 
+            builder.AppendLine(runtimeState.IsBossWave ? "Threat: Boss" : "Threat: Standard");
             builder.AppendLine($"Remaining Spawn: {runtimeState.RemainingToSpawn}");
             builder.Append($"Active Enemies: {runtimeState.ActiveEnemyCount}");
             return builder.ToString();

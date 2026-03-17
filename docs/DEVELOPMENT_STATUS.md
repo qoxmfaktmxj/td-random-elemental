@@ -16,6 +16,7 @@ Current implemented flow:
 8. Placed towers can be sold with `Q`.
 9. A runtime HUD shows gold, core HP, wave state, controls, and interaction prompts.
 10. Fire, Water, and Earth towers apply distinct elemental combat effects.
+11. The last wave is a boss encounter with win/lose flow and restart support.
 
 ## Completed Tasks
 
@@ -31,17 +32,11 @@ Current implemented flow:
 - `T10` Merge and sell
 - `T11` Element effects
 - `T12` HUD and world UI
+- `T14` Run flow and boss structure
 
 ## Remaining Tasks
 
 ### High Priority
-
-- `T14` Run flow and boss structure
-  - Clear win/lose handling
-  - Boss-specific encounter structure
-  - Node disable gimmick or other boss interaction
-
-### Medium Priority
 
 - `T13` Pity / guided summon logic
   - Prevent early dead-roll frustration
@@ -53,12 +48,23 @@ Current implemented flow:
   - Tier-up visual escalation
   - Boss intro sequence
 
+### Medium Priority
+
+- Authored content migration
+  - Replace runtime fallback towers, enemies, and waves with authored ScriptableObject assets
+  - Add authored tier 2~5 tower definitions instead of runtime-generated merge upgrades
+
+- Production UI conversion
+  - Replace the current `OnGUI` HUD with Canvas/TMP UI
+  - Add a proper result screen and boss warning panel
+
 ## Current Control Scheme
 
 - `WASD`: move
 - `Left Shift`: dash
 - `E`: summon on empty node / merge on merge-ready tower node
 - `Q`: sell tower on occupied node
+- `R`: restart run
 
 ## Current Runtime Fallback Content
 
@@ -68,10 +74,10 @@ Current implemented flow:
   - `Earth Impact T1`
 
 - Waves:
-  - 6 runtime fallback waves
+  - 5 standard runtime fallback waves + 1 boss runtime wave
 
 - Enemy visuals:
-  - Primitive placeholder enemies
+  - Primitive placeholder enemies with archetype-based shapes/colors
 
 - Tower visuals:
   - Primitive placeholder towers with tier-based scale growth
@@ -82,11 +88,12 @@ Current implemented flow:
 - Merge upgrade definitions are generated at runtime, not yet backed by authored tier assets.
 - The HUD is currently an `OnGUI` debug-style runtime UI, not a final production UI.
 - Element effects are implemented, but VFX and authored audiovisual feedback are still placeholder-level.
-- There is no explicit run-end screen or boss encounter flow yet.
+- Run end and boss flow are implemented, but they still rely on runtime banners and fallback content.
+- Boss gimmicks currently disable empty edge nodes only; there are no boss attacks, summons, or cinematics yet.
 
 ## Recommended Next Order
 
-1. Add run flow and boss structure so the loop has a real end state.
-2. Add pity logic so randomness becomes fairer.
+1. Add pity logic so randomness becomes fairer.
+2. Replace runtime fallback data with authored tower/enemy/wave assets.
 3. Replace the debug HUD with production UI.
 4. Add presentation polish after the systems are stable.

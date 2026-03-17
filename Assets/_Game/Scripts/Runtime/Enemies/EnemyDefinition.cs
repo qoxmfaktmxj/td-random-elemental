@@ -39,5 +39,27 @@ namespace TdRandomElemental.Enemies
         public int GoldReward => goldReward;
         public Vector3 ModelScale => modelScale;
         public GameObject Prefab => prefab;
+
+        public void ApplyRuntimeData(
+            string newEnemyId,
+            string newDisplayName,
+            EnemyArchetype newArchetype,
+            float newMaxHealth,
+            float newMoveSpeed,
+            int newCoreDamage,
+            int newGoldReward,
+            Vector3 newModelScale,
+            GameObject newPrefab = null)
+        {
+            enemyId = string.IsNullOrWhiteSpace(newEnemyId) ? "runtime_enemy" : newEnemyId;
+            displayName = string.IsNullOrWhiteSpace(newDisplayName) ? enemyId : newDisplayName;
+            archetype = newArchetype;
+            maxHealth = Mathf.Max(1f, newMaxHealth);
+            moveSpeed = Mathf.Max(0.1f, newMoveSpeed);
+            coreDamage = Mathf.Max(1, newCoreDamage);
+            goldReward = Mathf.Max(0, newGoldReward);
+            modelScale = newModelScale == Vector3.zero ? Vector3.one : newModelScale;
+            prefab = newPrefab;
+        }
     }
 }

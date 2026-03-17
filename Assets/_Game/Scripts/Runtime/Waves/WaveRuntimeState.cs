@@ -12,6 +12,7 @@ namespace TdRandomElemental.Waves
         [SerializeField] private int activeEnemyCount;
         [SerializeField] private bool isPreparing;
         [SerializeField] private bool isWaveRunning;
+        [SerializeField] private bool isBossWave;
         [SerializeField] private float timeUntilNextWave;
 
         public int TotalWaveCount => totalWaveCount;
@@ -21,6 +22,7 @@ namespace TdRandomElemental.Waves
         public int RemainingEnemyCount => remainingToSpawn + activeEnemyCount;
         public bool IsPreparing => isPreparing;
         public bool IsWaveRunning => isWaveRunning;
+        public bool IsBossWave => isBossWave;
         public float TimeUntilNextWave => timeUntilNextWave;
 
         public void ConfigureRun(int waveCount)
@@ -31,14 +33,16 @@ namespace TdRandomElemental.Waves
             activeEnemyCount = 0;
             isPreparing = false;
             isWaveRunning = false;
+            isBossWave = false;
             timeUntilNextWave = 0f;
         }
 
-        public void BeginPreparation(int waveIndex, float preparationSeconds)
+        public void BeginPreparation(int waveIndex, float preparationSeconds, bool bossWave)
         {
             currentWaveIndex = Mathf.Max(1, waveIndex);
             isPreparing = true;
             isWaveRunning = false;
+            isBossWave = bossWave;
             remainingToSpawn = 0;
             activeEnemyCount = 0;
             timeUntilNextWave = Mathf.Max(0f, preparationSeconds);
@@ -49,11 +53,12 @@ namespace TdRandomElemental.Waves
             timeUntilNextWave = Mathf.Max(0f, timeRemaining);
         }
 
-        public void BeginWave(int waveIndex, int totalSpawnCount)
+        public void BeginWave(int waveIndex, int totalSpawnCount, bool bossWave)
         {
             currentWaveIndex = Mathf.Max(1, waveIndex);
             isPreparing = false;
             isWaveRunning = true;
+            isBossWave = bossWave;
             remainingToSpawn = Mathf.Max(0, totalSpawnCount);
             activeEnemyCount = 0;
             timeUntilNextWave = 0f;
@@ -76,6 +81,7 @@ namespace TdRandomElemental.Waves
             activeEnemyCount = 0;
             isPreparing = false;
             isWaveRunning = false;
+            isBossWave = false;
             timeUntilNextWave = 0f;
         }
     }

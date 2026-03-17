@@ -32,6 +32,7 @@ namespace TdRandomElemental.Enemies
         public void Initialize(EnemyDefinition enemyDefinition)
         {
             definition = enemyDefinition;
+            isDead = false;
             currentHealth = MaxHealth;
             HealthChanged?.Invoke(this, currentHealth, MaxHealth);
         }
